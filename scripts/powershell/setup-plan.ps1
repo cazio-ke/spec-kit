@@ -31,6 +31,17 @@ if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit $paths.HAS_GI
 # Ensure the feature directory exists
 New-Item -ItemType Directory -Path $paths.FEATURE_DIR -Force | Out-Null
 
+# Copy design template if it exists, otherwise note it or create empty file
+$template = Join-Path $paths.REPO_ROOT '.specify/templates/design-template.md'
+if (Test-Path $template) { 
+    Copy-Item $template $paths.IMPL_DESIGN -Force
+    Write-Output "Copied design template to $($paths.IMPL_DESIGN)"
+} else {
+    Write-Warning "Design template not found at $template"
+    # Create a basic design file if template doesn't exist
+    New-Item -ItemType File -Path $paths.IMPL_DESIGN -Force | Out-Null
+}
+
 # Copy plan template if it exists, otherwise note it or create empty file
 $template = Join-Path $paths.REPO_ROOT '.specify/templates/plan-template.md'
 if (Test-Path $template) { 
@@ -42,10 +53,12 @@ if (Test-Path $template) {
     New-Item -ItemType File -Path $paths.IMPL_PLAN -Force | Out-Null
 }
 
+
 # Output results
 if ($Json) {
     $result = [PSCustomObject]@{ 
         FEATURE_SPEC = $paths.FEATURE_SPEC
+        IMPL_DESIGN = $paths.IMPL_DESIGN
         IMPL_PLAN = $paths.IMPL_PLAN
         SPECS_DIR = $paths.FEATURE_DIR
         BRANCH = $paths.CURRENT_BRANCH
@@ -54,6 +67,7 @@ if ($Json) {
     $result | ConvertTo-Json -Compress
 } else {
     Write-Output "FEATURE_SPEC: $($paths.FEATURE_SPEC)"
+    Write-Output "IMPL_DESIGN: $($paths.IMPL_DESIGN)"
     Write-Output "IMPL_PLAN: $($paths.IMPL_PLAN)"
     Write-Output "SPECS_DIR: $($paths.FEATURE_DIR)"
     Write-Output "BRANCH: $($paths.CURRENT_BRANCH)"

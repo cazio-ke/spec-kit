@@ -36,6 +36,17 @@ check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
 # Ensure the feature directory exists
 mkdir -p "$FEATURE_DIR"
 
+# Copy design template if it exists
+TEMPLATE="$REPO_ROOT/.specify/templates/design-template.md"
+if [[ -f "$TEMPLATE" ]]; then
+    cp "$TEMPLATE" "$IMPL_DESIGN"
+    echo "Copied design template to $IMPL_DESIGN"
+else
+    echo "Warning: Design template not found at $TEMPLATE"
+    # Create a basic plan file if template doesn't exist
+    touch "$IMPL_DESIGN"
+fi
+
 # Copy plan template if it exists
 TEMPLATE="$REPO_ROOT/.specify/templates/plan-template.md"
 if [[ -f "$TEMPLATE" ]]; then
