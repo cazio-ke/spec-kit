@@ -2,7 +2,7 @@ name: Create Release
 
 on:
   push:
-    branches: [ main, feat/design ]
+    branches: [ main, develop ]
     paths:
       - 'memory/**'
       - 'scripts/**'
