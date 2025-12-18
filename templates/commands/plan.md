@@ -36,7 +36,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Evaluate gates (ERROR if violations unjustified)
    - Phase 0: Generate research.md (resolve all NEEDS CLARIFICATION)
    - Phase 1: Generate design.md, domain-model.md (if needed)
-   - Phase 2: Generate contracts/, quickstart.md
+   - Phase 2: Generate contracts/, quickstart.md (if integration docs needed)
    - Phase 2: Update agent context by running the agent script
    - Re-evaluate Constitution Check post-design
 
@@ -125,7 +125,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Add only new technology from current plan
    - Preserve manual additions between markers
 
-**Output**: /contracts/*, quickstart.md, agent-specific file
+**Output**: /contracts/*, quickstart.md (optional), agent-specific file
 
 ## Key rules
 

@@ -36,7 +36,7 @@ $ARGUMENTS
     - 评估门控/关卡 (gates)（如果违规且无正当理由则报错）
     - 阶段 0：生成 research.md（解决所有 NEEDS CLARIFICATION）
     - 阶段 1：生成 design.md，domain-model.md（如果需要）
-    - 阶段 2：生成 contracts/，quickstart.md
+    - 阶段 2：生成 contracts/，以及 quickstart.md（如果需要集成说明）
     - 阶段 2：通过运行 agent 脚本更新 agent 上下文
     - 在设计完成后重新评估章程检查 (Constitution Check)
 
@@ -125,7 +125,7 @@ $ARGUMENTS
     - 仅添加当前计划中的新技术
     - 保留标记之间的手动添加内容
 
-**输出**：/contracts/*, quickstart.md, Agent 特定文件
+**输出**：/contracts/*, quickstart.md（可选）, Agent 特定文件
 
 ## 关键规则
 
