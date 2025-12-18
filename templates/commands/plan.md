@@ -1,5 +1,5 @@
 ---
-description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+description: 使用计划模板执行实施规划工作流，以生成设计产物。
 handoffs: 
   - label: Create Tasks
     agent: speckit.tasks
@@ -77,8 +77,9 @@ You **MUST** consider the user input before proceeding (if not empty).
    - State transitions if applicable
 
 2. **Consider IMPL_DESIGN guidance**:
-   - Reference Section 2: Requirements Overview (background, objectives, scope, value)
-   - Reference Section 3: Requirements Analysis (feature list, use case diagram, key processes)
+   - Reference Section 2: Design Background & Boundaries (background, objectives, boundaries)
+   - Reference Section 3: Technical Specifications & Constraints (key features, non-functional requirements)
+   - Reference Section 4.0: Research Conclusion Summary (tech stack, resolved unknowns)
    - Reference Section 4.1: System Context Diagram (system boundaries, external entities)
    - Reference Section 4.2: Impact Analysis (business processes, upstream/downstream systems, performance impact)
    - Reference Section 4.3: Key Design Decisions (using ADR format)
@@ -86,13 +87,13 @@ You **MUST** consider the user input before proceeding (if not empty).
 3. **Generate `design.md`**:
    - Follow the structure of `design-template.md`
    - Core content (required):
-     - Requirements Analysis (Section 3): feature list, use case diagram, key processes
+     - Technical Specifications (Section 3)
+     - Research Summary (Section 4.0)
      - System Context Diagram (Section 4.1)
-     - Key Design Decisions (Section 4.3): record important decisions in ADR format, including decision background, candidate solutions, selection rationale, and consequences
+     - Key Design Decisions (Section 4.3): record important decisions in ADR format
    - Optional extended content:
-     - Non-functional Requirements (Section 3.4)
      - Impact Analysis (Section 4.2)
-     - Domain Model Diagram (Section 4.4): UML class diagram, distinguish entities, value objects, and aggregate roots, relationship types and cardinality annotations
+     - Domain Model Diagram (Section 4.4): UML class diagram, refer to `data-model.md` for detailed fields
      - Specialized Design (Section 4.5) - e.g., state diagrams, sequence diagrams
 
 **Output**: design.md, data-model.md

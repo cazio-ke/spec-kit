@@ -1,5 +1,5 @@
 ---
-description: Generate a custom checklist for the current feature based on user requirements.
+description: 根据用户需求生成当前功能的自定义检查清单。
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json
   ps: scripts/powershell/check-prerequisites.ps1 -Json

@@ -1,5 +1,5 @@
 ---
-description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
+description: 对 spec/plan/tasks 进行跨工件一致性校验：1.检测需求覆盖率与任务映射缺口；2.识别重复、歧义及详述不足项；3.强制验证“项目宪法”合规性。输出非破坏性的分析报告与修复指引，防止设计缺陷流入代码实现阶段。
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
   ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
