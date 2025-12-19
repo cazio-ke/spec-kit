@@ -265,9 +265,11 @@ Essential commands for the Spec-Driven Development workflow:
 | ----------------------- | ------------------------------------------------------------------------ |
 | `/speckit.constitution` | Create or update project governing principles and development guidelines |
 | `/speckit.specify`      | Define what you want to build (requirements and user stories)            |
+| `/speckit.arch`         | Define or update project architecture based on requirements              |
 | `/speckit.plan`         | Create technical implementation plans with your chosen tech stack        |
 | `/speckit.tasks`        | Generate actionable task lists for implementation                        |
 | `/speckit.implement`    | Execute all tasks to build the feature according to the plan             |
+| `/speckit.integrate`    | Integrate completed changes back into project memory and constitution    |
 
 #### Optional Commands
 
@@ -278,6 +280,7 @@ Additional commands for enhanced quality and validation:
 | `/speckit.clarify`   | Clarify underspecified areas (recommended before `/speckit.plan`; formerly `/quizme`)                                                |
 | `/speckit.analyze`   | Cross-artifact consistency & coverage analysis (run after `/speckit.tasks`, before `/speckit.implement`)                             |
 | `/speckit.checklist` | Generate custom quality checklists that validate requirements completeness, clarity, and consistency (like "unit tests for English") |
+| `/speckit.taskstoissues` | Convert tasks.md checklist items into GitHub issues                                                                              |
 
 ### Environment Variables
 
@@ -469,9 +472,19 @@ At this stage, your project folder contents should resemble the following:
         └── tasks-template.md
 ```
 
-### **STEP 3:** Functional specification clarification (required before planning)
+### **STEP 3:** Define technical architecture with /speckit.arch
 
-With the baseline specification created, you can go ahead and clarify any of the requirements that were not captured properly within the first shot attempt.
+Before technical planning, establish the structural blueprint for your feature. Use the `/speckit.arch` command to generate or update the project's architecture definition:
+
+```text
+/speckit.arch
+```
+
+This step ensures that your feature aligns with established project patterns and identifies the key technical components (services, data stores, external APIs) required for implementation.
+
+### **STEP 4:** Functional specification clarification (required before planning)
+
+With the baseline specification and architecture defined, clarify any requirements that were not captured properly.
 
 You should run the structured clarification workflow **before** creating a technical plan to reduce rework downstream.
 
@@ -498,7 +511,7 @@ Read the review and acceptance checklist, and check off each item in the checkli
 
 It's important to use the interaction with Claude Code as an opportunity to clarify and ask questions around the specification - **do not treat its first attempt as final**.
 
-### **STEP 4:** Generate a plan
+### **STEP 5:** Generate a plan
 
 You can now be specific about the tech stack and other technical requirements. You can use the `/speckit.plan` command that is built into the project template with a prompt like this:
 
@@ -515,6 +528,7 @@ The output of this step will include a number of implementation detail documents
 ├── CLAUDE.md
 ├── memory
 │  └── constitution.md
+│  └── architecture.md
 ├── scripts
 │  ├── check-prerequisites.sh
 │  ├── common.sh
@@ -565,7 +579,7 @@ That's way too untargeted research. The research needs to help you solve a speci
 > [!NOTE]
 > Claude Code might be over-eager and add components that you did not ask for. Ask it to clarify the rationale and the source of the change.
 
-### **STEP 5:** Have Claude Code validate the plan
+### **STEP 6:** Have Claude Code validate the plan
 
 With the plan in place, you should have Claude Code run through it to make sure that there are no missing pieces. You can use a prompt like this:
 
@@ -584,7 +598,7 @@ You can also ask Claude Code (if you have the [GitHub CLI](https://docs.github.c
 > [!NOTE]
 > Before you have the agent implement it, it's also worth prompting Claude Code to cross-check the details to see if there are any over-engineered pieces (remember - it can be over-eager). If over-engineered components or decisions exist, you can ask Claude Code to resolve them. Ensure that Claude Code follows the [constitution](base/memory/constitution.md) as the foundational piece that it must adhere to when establishing the plan.
 
-### **STEP 6:** Generate task breakdown with /speckit.tasks
+### **STEP 7:** Generate task breakdown with /speckit.tasks
 
 With the implementation plan validated, you can now break down the plan into specific, actionable tasks that can be executed in the correct order. Use the `/speckit.tasks` command to automatically generate a detailed task breakdown from your implementation plan:
 
@@ -603,7 +617,7 @@ This step creates a `tasks.md` file in your feature specification directory that
 
 The generated tasks.md provides a clear roadmap for the `/speckit.implement` command, ensuring systematic implementation that maintains code quality and allows for incremental delivery of user stories.
 
-### **STEP 7:** Implementation
+### **STEP 8:** Implementation
 
 Once ready, use the `/speckit.implement` command to execute your implementation plan:
 
@@ -623,6 +637,19 @@ The `/speckit.implement` command will:
 > The AI agent will execute local CLI commands (such as `dotnet`, `npm`, etc.) - make sure you have the required tools installed on your machine.
 
 Once the implementation is complete, test the application and resolve any runtime errors that may not be visible in CLI logs (e.g., browser console errors). You can copy and paste such errors back to your AI agent for resolution.
+
+### **STEP 9:** Integration and Memory Update
+
+The final stage of the lifecycle is integrating the completed feature back into the project's global memory. Use the `/speckit.integrate` command:
+
+```text
+/speckit.integrate
+```
+
+This command will:
+- Synchronize architectural changes back to the global `architecture.md`
+- Update the project's global principles in `constitution.md` based on implementation insights
+- Ensure that the entire project "remembers" the patterns and decisions made during this feature development, making them available for future features.
 
 </details>
 

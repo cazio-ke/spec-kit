@@ -259,19 +259,22 @@ specify check
 | ----------------------- | ---------------------------------------------- |
 | `/speckit.constitution` | 创建或更新项目治理原则和开发指南               |
 | `/speckit.specify`      | 定义你想要构建的内容（需求和用户故事）         |
+| `/speckit.arch`         | 根据需求定义或更新项目架构                     |
 | `/speckit.plan`         | 使用你选择的技术栈创建技术实施计划             |
 | `/speckit.tasks`        | 生成可执行的任务列表以进行实施                 |
 | `/speckit.implement`    | 执行所有任务以根据计划构建功能                 |
+| `/speckit.integrate`    | 将已完成的变更集成回项目记忆和章程             |
 
 #### 可选命令
 
-用于增强质量和验证的附加命令：
+用于增强质量、验证和工作流的附加命令：
 
 | 命令                 | 描述                                                                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | `/speckit.clarify`   | 澄清未充分指定的区域（建议在 `/speckit.plan` 之前；以前称为 `/quizme`）                                |
 | `/speckit.analyze`   | 跨工件一致性和覆盖率分析（在 `/speckit.tasks` 之后、`/speckit.implement` 之前运行）                   |
 | `/speckit.checklist` | 生成自定义质量检查清单，验证需求的完整性、清晰度和一致性（类似于"英语的单元测试"）                     |
+| `/speckit.taskstoissues` | 将 tasks.md 检查清单项转换为 GitHub issues                                                         |
 
 ### 环境变量
 
@@ -384,7 +387,18 @@ specify check
 /speckit.specify 我想要一个照片相册功能，用户可以创建、编辑和共享相册
 ```
 
-### 3. Clarify（澄清）
+### 3. Architecture（架构）
+
+**目的**: 根据规范定义或更新项目的技术架构。
+
+**何时使用**: 在指定功能之后、详细计划之前，确保架构一致性。
+
+**示例**:
+```bash
+/speckit.arch
+```
+
+### 4. Clarify（澄清）
 
 **目的**: 识别和解决规范中未充分指定的区域。
 
@@ -395,9 +409,9 @@ specify check
 /speckit.clarify
 ```
 
-### 4. Plan（计划）
+### 5. Plan（计划）
 
-**目的**: 基于规范创建技术实施计划。
+**目的**: 基于规范和架构创建技术实施计划。
 
 **何时使用**: 在开始实施之前，需要技术设计。
 
@@ -406,7 +420,7 @@ specify check
 /speckit.plan 我正在使用 React + TypeScript + Tailwind 构建
 ```
 
-### 5. Tasks（任务）
+### 6. Tasks（任务）
 
 **目的**: 从计划生成可执行的任务列表。
 
@@ -417,7 +431,7 @@ specify check
 /speckit.tasks
 ```
 
-### 6. Analyze（分析）
+### 7. Analyze（分析）
 
 **目的**: 分析任务和设计工件的一致性和覆盖率。
 
@@ -428,7 +442,7 @@ specify check
 /speckit.analyze
 ```
 
-### 7. Implement（实施）
+### 8. Implement（实施）
 
 **目的**: 执行任务列表以构建功能。
 
@@ -439,7 +453,18 @@ specify check
 /speckit.implement
 ```
 
-### 8. Checklist（检查清单）
+### 9. Integrate（集成）
+
+**目的**: 将已完成的功能变更集成回全局项目记忆和章程。
+
+**何时使用**: 在实施完成并验证之后。
+
+**示例**:
+```bash
+/speckit.integrate
+```
+
+### 10. Checklist（检查清单）
 
 **目的**: 生成自定义质量检查清单以验证需求。
 
@@ -448,6 +473,17 @@ specify check
 **示例**:
 ```bash
 /speckit.checklist 为用户认证功能创建检查清单
+```
+
+### 11. Tasks to Issues (任务转 Issue)
+
+**目的**: 将 `tasks.md` 中的任务转换为 GitHub issue 进行跟踪。
+
+**何时使用**: 当你想要从本地开发转向基于团队的 issue 跟踪系统时。
+
+**示例**:
+```bash
+/speckit.taskstoissues
 ```
 
 ## 🔍 故障排除
@@ -525,4 +561,3 @@ Spec Kit 建立在现代开发工具和 AI 技术的基础之上。感谢所有�
 ## 📄 许可证
 
 本项目根据 [MIT 许可证](./LICENSE)获得许可。
-
