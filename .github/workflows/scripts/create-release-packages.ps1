@@ -107,7 +107,7 @@ function Generate-Commands {
             $body = $body -replace '(?m)^\s*prompt-cn:.*$\r?\n?', ''
             
             # Extract description from YAML frontmatter
-            if ($fileContent -match '(?m)^description:\s*(.+)$') {
+        if ($fileContent -match '(?m)^description:\s*(.+)$') {
                 $description = $matches[1].Trim()
             }
         } else {
@@ -211,7 +211,7 @@ function Generate-Commands {
                 $body += "`n" + $match.Groups[1].Value.Trim()
             }
         }
-
+        
         # Extract script command from YAML frontmatter
         $scriptCommand = ""
         if ($Lang -eq "cn") {
@@ -220,7 +220,7 @@ function Generate-Commands {
             }
         }
         if ([string]::IsNullOrEmpty($scriptCommand)) {
-            if ($fileContent -match "(?m)^\s*${ScriptVariant}:\s*(.+)$") {
+        if ($fileContent -match "(?m)^\s*${ScriptVariant}:\s*(.+)$") {
                 $scriptCommand = $matches[1].Trim()
             }
         }
@@ -238,8 +238,8 @@ function Generate-Commands {
             }
         }
         if ([string]::IsNullOrEmpty($agentScriptCommand)) {
-            if ($fileContent -match "(?ms)agent_scripts:.*?^\s*${ScriptVariant}:\s*(.+?)$") {
-                $agentScriptCommand = $matches[1].Trim()
+        if ($fileContent -match "(?ms)agent_scripts:.*?^\s*${ScriptVariant}:\s*(.+?)$") {
+            $agentScriptCommand = $matches[1].Trim()
             }
         }
         
@@ -488,7 +488,11 @@ function Build-Variant {
     }
     
     # Create zip archive
-    $zipFile = Join-Path $GenReleasesDir "spec-kit-template-${Agent}-${Script}-${Lang}-${Version}.zip"
+    if ($Lang -eq "en") {
+        $zipFile = Join-Path $GenReleasesDir "spec-kit-template-${Agent}-${Script}-${Version}.zip"
+    } else {
+        $zipFile = Join-Path $GenReleasesDir "spec-kit-template-${Agent}-${Script}-${Lang}-${Version}.zip"
+    }
     Compress-Archive -Path "$baseDir/*" -DestinationPath $zipFile -Force
     Write-Host "Created $zipFile"
 }

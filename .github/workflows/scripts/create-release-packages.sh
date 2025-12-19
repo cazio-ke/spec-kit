@@ -48,7 +48,7 @@ generate_commands() {
     
     # Normalize line endings
     file_content=$(tr -d '\r' < "$template")
-
+    
     # 1. Body extraction based on language
     if [[ $lang == "en" ]]; then
       # Remove all [CN]...[/CN] blocks
@@ -108,7 +108,7 @@ generate_commands() {
       # Extract description
       description=$(printf '%s\n' "$file_content" | awk '/^description-cn:/ {sub(/^description-cn:[[:space:]]*/, ""); print; exit}')
       if [[ -z $description ]]; then
-        description=$(printf '%s\n' "$file_content" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}')
+    description=$(printf '%s\n' "$file_content" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}')
       fi
       
       # 2. Extract [CN] blocks
@@ -124,7 +124,7 @@ generate_commands() {
       script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '/^[[:space:]]*'"$script_variant"'-cn:[[:space:]]*/ {sub(/^[[:space:]]*'"$script_variant"'-cn:[[:space:]]*/, ""); print; exit}')
     fi
     if [[ -z ${script_command:-} ]]; then
-      script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '/^[[:space:]]*'"$script_variant"':[[:space:]]*/ {sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit}')
+    script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '/^[[:space:]]*'"$script_variant"':[[:space:]]*/ {sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit}')
     fi
     
     if [[ -z ${script_command:-} ]]; then
@@ -147,14 +147,14 @@ generate_commands() {
     fi
     if [[ -z ${agent_script_command:-} ]]; then
       agent_script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '
-        /^agent_scripts:$/ { in_agent_scripts=1; next }
-        in_agent_scripts && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
-          sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, "")
-          print
-          exit
-        }
-        in_agent_scripts && /^[a-zA-Z]/ { in_agent_scripts=0 }
-      ')
+      /^agent_scripts:$/ { in_agent_scripts=1; next }
+      in_agent_scripts && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
+        sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, "")
+        print
+        exit
+      }
+      in_agent_scripts && /^[a-zA-Z]/ { in_agent_scripts=0 }
+    ')
     fi
     
     # Replace {SCRIPT} placeholder with the script command
@@ -311,8 +311,14 @@ build_variant() {
       mkdir -p "$base_dir/.bob/commands"
       generate_commands bob md "\$ARGUMENTS" "$base_dir/.bob/commands" "$script" "$lang" ;;
   esac
-  ( cd "$base_dir" && zip -r "../spec-kit-template-${agent}-${script}-${lang}-${NEW_VERSION}.zip" . )
-  echo "Created $GENRELEASES_DIR/spec-kit-template-${agent}-${script}-${lang}-${NEW_VERSION}.zip"
+  local zip_name
+  if [[ "$lang" == "en" ]]; then
+    zip_name="spec-kit-template-${agent}-${script}-${NEW_VERSION}.zip"
+  else
+    zip_name="spec-kit-template-${agent}-${script}-${lang}-${NEW_VERSION}.zip"
+  fi
+  ( cd "$base_dir" && zip -r "../$zip_name" . )
+  echo "Created $GENRELEASES_DIR/$zip_name"
 }
 
 # Determine agent list
