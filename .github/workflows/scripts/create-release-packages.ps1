@@ -100,21 +100,115 @@ function Generate-Commands {
         if ($Lang -eq "en") {
             # Remove all [CN]...[/CN] blocks
             $body = $fileContent -replace '(?ms)\[CN\].*?\[/CN\]', ''
+            
+            # Remove all -cn fields from frontmatter
+            $body = $body -replace '(?m)^description-cn:.*$\r?\n?', ''
+            $body = $body -replace '(?m)^\s*label-cn:.*$\r?\n?', ''
+            $body = $body -replace '(?m)^\s*prompt-cn:.*$\r?\n?', ''
+            
             # Extract description from YAML frontmatter
             if ($fileContent -match '(?m)^description:\s*(.+)$') {
                 $description = $matches[1].Trim()
             }
         } else {
-            # Extract only [CN]...[/CN] blocks
-            $matches_cn = [regex]::Matches($fileContent, '(?ms)\[CN\](.*?)\[/CN\]')
-            foreach ($match in $matches_cn) {
-                $body += $match.Groups[1].Value
+            # For CN: Extract frontmatter and [CN] blocks separately, then combine
+            
+            # 1. Extract and transform frontmatter
+            if ($fileContent -match '(?ms)^(---.*?---)') {
+                $frontmatter = $matches[1]
+                
+                # Check if frontmatter contains [CN] blocks for entire handoffs section
+                $hasCnHandoffs = $frontmatter -match '(?ms)handoffs:.*?\[CN\]'
+                
+                if ($hasCnHandoffs) {
+                    # Replace everything between "handoffs:" and "[CN]" with the CN content
+                    $processed = $frontmatter -replace '(?ms)(handoffs:\s*\r?\n)(.*?)\[CN\]\s*\r?\n(.*?)\s*\[/CN\]', '$1$3'
+                    $body = $processed
+                    
+                    # Extract description
+                    if ($frontmatter -match '(?m)^description-cn:\s*(.+)$') {
+                        $description = $matches[1].Trim()
+                        $body = $body -replace '(?m)^description:.*\r?\n', ''
+                        $body = $body -replace '(?m)^description-cn:', 'description:'
+                    } elseif ($frontmatter -match '(?m)^description:\s*(.+)$') {
+                        $description = $matches[1].Trim()
+                    }
+                    
+                    # Clean up blank lines before closing ---
+                    $body = $body -replace '(?ms)\s*\r?\n(\s*\r?\n)+---', "`n---"
+                } else {
+                    # Original logic for inline label-cn/prompt-cn
+                    $lines = $frontmatter -split "`n"
+                    $newFrontmatterLines = @()
+                    
+                    for ($i = 0; $i -lt $lines.Length; $i++) {
+                        $line = $lines[$i]
+                        
+                        if ($line -match '^description-cn:\s*(.+)$') {
+                            $newFrontmatterLines += "description: $($matches[1].Trim())"
+                            $description = $matches[1].Trim()
+                            continue
+                        }
+                        if ($line -match '^description:\s*(.+)$') {
+                            if ([string]::IsNullOrEmpty($description)) {
+                                $description = $matches[1].Trim()
+                            }
+                            continue
+                        }
+                        
+                        if ($line -match '^(\s*)-\s+label:\s*(.+)$') {
+                            continue
+                        }
+                        
+                        if ($line -match '^(\s*)label-cn:\s*(.+)$') {
+                            $indent = $matches[1]
+                            $value = $matches[2].Trim()
+                            if ($indent.Length -ge 4) {
+                                $newFrontmatterLines += "  - label: $value"
+                            } else {
+                                $newFrontmatterLines += "${indent}label: $value"
+                            }
+                            continue
+                        }
+                        
+                        if ($line -match '^(\s*)prompt:\s*(.+)$') {
+                            $hasPromptCn = $false
+                            for ($j = $i + 1; $j -lt [Math]::Min($i + 5, $lines.Length); $j++) {
+                                if ($lines[$j] -match '^\s*prompt-cn:') {
+                                    $hasPromptCn = $true
+                                    break
+                                }
+                                if ($lines[$j] -match '^\s*-\s+\w+:') {
+                                    break
+                                }
+                            }
+                            if ($hasPromptCn) {
+                                continue
+                            }
+                            $newFrontmatterLines += $line
+                            continue
+                        }
+                        
+                        if ($line -match '^(\s*)prompt-cn:\s*(.+)$') {
+                            $newFrontmatterLines += ($line -replace 'prompt-cn:', 'prompt:')
+                            continue
+                        }
+                        
+                        $newFrontmatterLines += $line
+                    }
+                    
+                    $body = $newFrontmatterLines -join "`n"
+                }
             }
-            # Extract description-cn, fallback to description
-            if ($fileContent -match '(?m)^description-cn:\s*(.+)$') {
-                $description = $matches[1].Trim()
-            } elseif ($fileContent -match '(?m)^description:\s*(.+)$') {
-                $description = $matches[1].Trim()
+            
+            # 2. Extract [CN] blocks from AFTER frontmatter only
+            $bodyAfterFrontmatter = ""
+            if ($fileContent -match '(?ms)^---.*?---(.*)$') {
+                $bodyAfterFrontmatter = $matches[1]
+            }
+            $matches_cn = [regex]::Matches($bodyAfterFrontmatter, '(?ms)\[CN\](.*?)\[/CN\]')
+            foreach ($match in $matches_cn) {
+                $body += "`n" + $match.Groups[1].Value.Trim()
             }
         }
 
@@ -158,7 +252,6 @@ function Generate-Commands {
         }
         
         # Remove the scripts: and agent_scripts: sections from frontmatter
-        # Also handle label-cn -> label and prompt-cn -> prompt swap if Lang=cn
         $lines = $body -split "`n"
         $outputLines = @()
         $inFrontmatter = $false
@@ -178,30 +271,6 @@ function Generate-Commands {
             }
             
             if ($inFrontmatter) {
-                if ($Lang -eq "cn") {
-                    if ($line -match '^description-cn:\s*(.+)$') {
-                        $outputLines += "description: $($matches[1].Trim())"
-                        continue
-                    }
-                    if ($line -match '^description:\s*(.+)$') {
-                        continue
-                    }
-                    if ($line -match '^\s*-\s*label-cn:\s*(.+)$') {
-                        $outputLines += ($line -replace 'label-cn:', 'label:')
-                        continue
-                    }
-                    if ($line -match '^\s*-\s*label:\s*(.+)$') {
-                        continue
-                    }
-                    if ($line -match '^\s*prompt-cn:\s*(.+)$') {
-                        $outputLines += ($line -replace 'prompt-cn:', 'prompt:')
-                        continue
-                    }
-                    if ($line -match '^\s*prompt:\s*(.+)$') {
-                        continue
-                    }
-                }
-
                 if ($line -match '^(scripts|agent_scripts):$') {
                     $skipScripts = $true
                     continue
@@ -218,6 +287,9 @@ function Generate-Commands {
         }
         
         $body = $outputLines -join "`n"
+        
+        # Clean up multiple consecutive blank lines (keep max 1 blank line)
+        $body = $body -replace '(?m)(\r?\n){3,}', "`n`n"
         
         # Apply other substitutions
         $body = $body -replace '\{ARGS\}', $ArgFormat
@@ -427,14 +499,14 @@ $AllScripts = @('sh', 'ps')
 $AllLangs = @('en', 'cn')
 
 function Normalize-List {
-    param([string]$Input)
+    param([string]$RawString)
     
-    if ([string]::IsNullOrEmpty($Input)) {
+    if ([string]::IsNullOrEmpty($RawString)) {
         return @()
     }
     
     # Split by comma or space and remove duplicates while preserving order
-    $items = $Input -split '[,\s]+' | Where-Object { $_ } | Select-Object -Unique
+    $items = $RawString -split '[,\s]+' | Where-Object { $_ } | Select-Object -Unique
     return $items
 }
 
@@ -457,7 +529,7 @@ function Validate-Subset {
 
 # Determine agent list
 if (-not [string]::IsNullOrEmpty($Agents)) {
-    $AgentList = Normalize-List -Input $Agents
+    $AgentList = Normalize-List -RawString $Agents
     if (-not (Validate-Subset -Type 'agent' -Allowed $AllAgents -Items $AgentList)) {
         exit 1
     }
@@ -467,7 +539,7 @@ if (-not [string]::IsNullOrEmpty($Agents)) {
 
 # Determine script list
 if (-not [string]::IsNullOrEmpty($Scripts)) {
-    $ScriptList = Normalize-List -Input $Scripts
+    $ScriptList = Normalize-List -RawString $Scripts
     if (-not (Validate-Subset -Type 'script' -Allowed $AllScripts -Items $ScriptList)) {
         exit 1
     }
@@ -477,7 +549,7 @@ if (-not [string]::IsNullOrEmpty($Scripts)) {
 
 # Determine lang list
 if (-not [string]::IsNullOrEmpty($Langs)) {
-    $LangList = Normalize-List -Input $Langs
+    $LangList = Normalize-List -RawString $Langs
     if (-not (Validate-Subset -Type 'lang' -Allowed $AllLangs -Items $LangList)) {
         exit 1
     }

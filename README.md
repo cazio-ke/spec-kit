@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+    <a href="./README.md">English</a> | <a href="./README-CN.md">简体中文</a>
+</p>
+
+<p align="center">
     <a href="https://github.com/zixun-github/spec-kit/actions/workflows/release.yml"><img src="https://github.com/zixun-github/spec-kit/actions/workflows/release.yml/badge.svg" alt="Release"/></a>
     <a href="https://github.com/zixun-github/spec-kit/stargazers"><img src="https://img.shields.io/github/stars/github/spec-kit?style=social" alt="GitHub stars"/></a>
     <a href="https://github.com/zixun-github/spec-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/github/spec-kit" alt="License"/></a>
@@ -181,6 +185,7 @@ The `specify` command supports the following options:
 | `<project-name>`       | Argument | Name for your new project directory (optional if using `--here`, or use `.` for current directory)                                                                                           |
 | `--ai`                 | Option   | AI assistant to use: `claude`, `gemini`, `copilot`, `cursor-agent`, `qwen`, `opencode`, `codex`, `windsurf`, `kilocode`, `auggie`, `roo`, `codebuddy`, `amp`, `shai`, `q`, `bob`, or `qoder` |
 | `--script`             | Option   | Script variant to use: `sh` (bash/zsh) or `ps` (PowerShell)                                                                                                                                  |
+| `--lang`               | Option   | Language for templates: `en` (English) or `cn` (Simplified Chinese). If not specified, you'll be prompted to select                                                                          |
 | `--ignore-agent-tools` | Flag     | Skip checks for AI agent tools like Claude Code                                                                                                                                              |
 | `--no-git`             | Flag     | Skip git repository initialization                                                                                                                                                           |
 | `--here`               | Flag     | Initialize project in the current directory instead of creating a new one                                                                                                                    |
@@ -218,6 +223,12 @@ specify init my-project --ai bob
 
 # Initialize with PowerShell scripts (Windows/cross-platform)
 specify init my-project --ai copilot --script ps
+
+# Initialize with Simplified Chinese templates
+specify init my-project --ai claude --lang cn
+
+# Initialize with English templates (default if not specified)
+specify init my-project --ai claude --lang en
 
 # Initialize in current directory
 specify init . --ai copilot

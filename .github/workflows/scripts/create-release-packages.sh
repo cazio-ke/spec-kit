@@ -53,16 +53,69 @@ generate_commands() {
     if [[ $lang == "en" ]]; then
       # Remove all [CN]...[/CN] blocks
       body=$(printf '%s\n' "$file_content" | sed '/\[CN\]/,/\[\/CN\]/d')
+      # Remove all -cn fields from frontmatter
+      body=$(printf '%s\n' "$body" | sed '/^description-cn:/d' | sed '/^[[:space:]]*label-cn:/d' | sed '/^[[:space:]]*prompt-cn:/d')
       # Extract description from YAML frontmatter
       description=$(printf '%s\n' "$file_content" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}')
     else
-      # Extract only [CN]...[/CN] blocks
-      body=$(printf '%s\n' "$file_content" | awk '/\[CN\]/ {in_cn=1; next} /\[\/CN\]/ {in_cn=0; next} in_cn {print}')
-      # Extract description-cn, fallback to description
+      # For CN: Extract frontmatter and [CN] blocks separately, then combine
+      
+      # 1. Extract and transform frontmatter
+      frontmatter=$(printf '%s\n' "$file_content" | awk '
+        BEGIN { dash_count=0 }
+        /^---$/ { dash_count++; print; if (dash_count >= 2) exit; next }
+        dash_count == 1 { print }
+      ')
+      
+      processed_fm=$(printf '%s\n' "$frontmatter" | awk '
+        /^---$/ { print; next }
+        /^description-cn:/ { 
+          sub(/^description-cn:/, "description:")
+          print
+          next 
+        }
+        /^description:/ { next }
+        /^[[:space:]]*-[[:space:]]+label:/ { next }
+        /^[[:space:]]*label-cn:/ {
+          indent_len = match($0, /[^[:space:]]/) - 1
+          value = $0
+          sub(/^[[:space:]]*label-cn:[[:space:]]*/, "", value)
+          if (indent_len >= 4) {
+            printf "  - label: %s\n", value
+          } else {
+            sub(/label-cn:/, "label:", $0)
+            print
+          }
+          next
+        }
+        /^[[:space:]]*prompt:/ { 
+          getline next_line
+          if (next_line ~ /prompt-cn:/) {
+            $0 = next_line
+            sub(/prompt-cn:/, "prompt:")
+            print
+          }
+          next
+        }
+        /^[[:space:]]*prompt-cn:/ {
+          sub(/prompt-cn:/, "prompt:")
+          print
+          next
+        }
+        { print }
+      ')
+      
+      # Extract description
       description=$(printf '%s\n' "$file_content" | awk '/^description-cn:/ {sub(/^description-cn:[[:space:]]*/, ""); print; exit}')
       if [[ -z $description ]]; then
         description=$(printf '%s\n' "$file_content" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}')
       fi
+      
+      # 2. Extract [CN] blocks
+      cn_blocks=$(printf '%s\n' "$file_content" | awk '/\[CN\]/ {in_cn=1; next} /\[\/CN\]/ {in_cn=0; next} in_cn {print}')
+      
+      # 3. Combine frontmatter and CN blocks
+      body=$(printf '%s\n%s' "$processed_fm" "$cn_blocks")
     fi
     
     # Extract script command from YAML frontmatter
@@ -112,25 +165,19 @@ generate_commands() {
       body=$(printf '%s\n' "$body" | sed "s|{AGENT_SCRIPT}|${agent_script_command}|g")
     fi
     
-    # Remove the scripts: and agent_scripts: sections from frontmatter while preserving YAML structure
-    # Also handle label-cn -> label and prompt-cn -> prompt swap if lang=cn
-    body=$(printf '%s\n' "$body" | awk -v lang="$lang" '
+    # Remove the scripts: and agent_scripts: sections from frontmatter
+    body=$(printf '%s\n' "$body" | awk '
       /^---$/ { print; if (++dash_count == 1) in_frontmatter=1; else in_frontmatter=0; next }
       in_frontmatter {
-        if (lang == "cn") {
-          if (/^description-cn:/) { sub(/^description-cn:/, "description:"); print; next }
-          if (/^description:/) { next }
-          if (/^[[:space:]]*- label-cn:/) { sub(/- label-cn:/, "- label:"); print; next }
-          if (/^[[:space:]]*- label:/) { next }
-          if (/^[[:space:]]*prompt-cn:/) { sub(/prompt-cn:/, "prompt:"); print; next }
-          if (/^[[:space:]]*prompt:/) { next }
-        }
         if (/^scripts:$/ || /^agent_scripts:$/) { skip_scripts=1; next }
         if (/^[a-zA-Z].*:/ && skip_scripts) { skip_scripts=0 }
         if (skip_scripts && /^[[:space:]]/) { next }
       }
       { print }
     ')
+    
+    # Clean up multiple consecutive blank lines (keep max 1 blank line)
+    body=$(printf '%s\n' "$body" | awk 'NF {blank=0; print; next} !blank {blank=1; print}')
     
     # Apply other substitutions
     body=$(printf '%s\n' "$body" | sed "s/{ARGS}/$arg_format/g" | sed "s/__AGENT__/$agent/g" | rewrite_paths)
