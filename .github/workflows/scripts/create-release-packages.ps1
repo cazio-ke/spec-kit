@@ -20,6 +20,10 @@
     Comma or space separated subset of script types to build (default: both)
     Valid scripts: sh, ps
 
+.PARAMETER Langs
+    Comma or space separated subset of languages to build (default: both)
+    Valid languages: en, cn
+
 .EXAMPLE
     .\create-release-packages.ps1 -Version v0.2.0
 
@@ -38,7 +42,10 @@ param(
     [string]$Agents = "",
     
     [Parameter(Mandatory=$false)]
-    [string]$Scripts = ""
+    [string]$Scripts = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$Langs = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -73,7 +80,8 @@ function Generate-Commands {
         [string]$Extension,
         [string]$ArgFormat,
         [string]$OutputDir,
-        [string]$ScriptVariant
+        [string]$ScriptVariant,
+        [string]$Lang
     )
     
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
@@ -86,16 +94,41 @@ function Generate-Commands {
         # Read file content and normalize line endings
         $fileContent = (Get-Content -Path $template.FullName -Raw) -replace "`r`n", "`n"
         
-        # Extract description from YAML frontmatter
+        $body = ""
         $description = ""
-        if ($fileContent -match '(?m)^description:\s*(.+)$') {
-            $description = $matches[1]
+
+        if ($Lang -eq "en") {
+            # Remove all [CN]...[/CN] blocks
+            $body = $fileContent -replace '(?ms)\[CN\].*?\[/CN\]', ''
+            # Extract description from YAML frontmatter
+            if ($fileContent -match '(?m)^description:\s*(.+)$') {
+                $description = $matches[1].Trim()
+            }
+        } else {
+            # Extract only [CN]...[/CN] blocks
+            $matches_cn = [regex]::Matches($fileContent, '(?ms)\[CN\](.*?)\[/CN\]')
+            foreach ($match in $matches_cn) {
+                $body += $match.Groups[1].Value
+            }
+            # Extract description-cn, fallback to description
+            if ($fileContent -match '(?m)^description-cn:\s*(.+)$') {
+                $description = $matches[1].Trim()
+            } elseif ($fileContent -match '(?m)^description:\s*(.+)$') {
+                $description = $matches[1].Trim()
+            }
         }
-        
+
         # Extract script command from YAML frontmatter
         $scriptCommand = ""
-        if ($fileContent -match "(?m)^\s*${ScriptVariant}:\s*(.+)$") {
-            $scriptCommand = $matches[1]
+        if ($Lang -eq "cn") {
+            if ($fileContent -match "(?m)^\s*${ScriptVariant}-cn:\s*(.+)$") {
+                $scriptCommand = $matches[1].Trim()
+            }
+        }
+        if ([string]::IsNullOrEmpty($scriptCommand)) {
+            if ($fileContent -match "(?m)^\s*${ScriptVariant}:\s*(.+)$") {
+                $scriptCommand = $matches[1].Trim()
+            }
         }
         
         if ([string]::IsNullOrEmpty($scriptCommand)) {
@@ -105,12 +138,19 @@ function Generate-Commands {
         
         # Extract agent_script command from YAML frontmatter if present
         $agentScriptCommand = ""
-        if ($fileContent -match "(?ms)agent_scripts:.*?^\s*${ScriptVariant}:\s*(.+?)$") {
-            $agentScriptCommand = $matches[1].Trim()
+        if ($Lang -eq "cn") {
+            if ($fileContent -match "(?ms)agent_scripts:.*?^\s*${ScriptVariant}-cn:\s*(.+?)$") {
+                $agentScriptCommand = $matches[1].Trim()
+            }
+        }
+        if ([string]::IsNullOrEmpty($agentScriptCommand)) {
+            if ($fileContent -match "(?ms)agent_scripts:.*?^\s*${ScriptVariant}:\s*(.+?)$") {
+                $agentScriptCommand = $matches[1].Trim()
+            }
         }
         
         # Replace {SCRIPT} placeholder with the script command
-        $body = $fileContent -replace '\{SCRIPT\}', $scriptCommand
+        $body = $body -replace '\{SCRIPT\}', $scriptCommand
         
         # Replace {AGENT_SCRIPT} placeholder with the agent script command if found
         if (-not [string]::IsNullOrEmpty($agentScriptCommand)) {
@@ -118,6 +158,7 @@ function Generate-Commands {
         }
         
         # Remove the scripts: and agent_scripts: sections from frontmatter
+        # Also handle label-cn -> label and prompt-cn -> prompt swap if Lang=cn
         $lines = $body -split "`n"
         $outputLines = @()
         $inFrontmatter = $false
@@ -137,6 +178,30 @@ function Generate-Commands {
             }
             
             if ($inFrontmatter) {
+                if ($Lang -eq "cn") {
+                    if ($line -match '^description-cn:\s*(.+)$') {
+                        $outputLines += "description: $($matches[1].Trim())"
+                        continue
+                    }
+                    if ($line -match '^description:\s*(.+)$') {
+                        continue
+                    }
+                    if ($line -match '^\s*-\s*label-cn:\s*(.+)$') {
+                        $outputLines += ($line -replace 'label-cn:', 'label:')
+                        continue
+                    }
+                    if ($line -match '^\s*-\s*label:\s*(.+)$') {
+                        continue
+                    }
+                    if ($line -match '^\s*prompt-cn:\s*(.+)$') {
+                        $outputLines += ($line -replace 'prompt-cn:', 'prompt:')
+                        continue
+                    }
+                    if ($line -match '^\s*prompt:\s*(.+)$') {
+                        continue
+                    }
+                }
+
                 if ($line -match '^(scripts|agent_scripts):$') {
                     $skipScripts = $true
                     continue
@@ -204,11 +269,12 @@ agent: $basename
 function Build-Variant {
     param(
         [string]$Agent,
-        [string]$Script
+        [string]$Script,
+        [string]$Lang
     )
     
-    $baseDir = Join-Path $GenReleasesDir "sdd-${Agent}-package-${Script}"
-    Write-Host "Building $Agent ($Script) package..."
+    $baseDir = Join-Path $GenReleasesDir "sdd-${Agent}-package-${Script}-${Lang}"
+    Write-Host "Building $Agent ($Script) ($Lang) package..."
     New-Item -ItemType Directory -Path $baseDir -Force | Out-Null
     
     # Copy base structure but filter scripts by variant
@@ -268,18 +334,18 @@ function Build-Variant {
     switch ($Agent) {
         'claude' {
             $cmdDir = Join-Path $baseDir ".claude/commands"
-            Generate-Commands -Agent 'claude' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'claude' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'gemini' {
             $cmdDir = Join-Path $baseDir ".gemini/commands"
-            Generate-Commands -Agent 'gemini' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'gemini' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
             if (Test-Path "agent_templates/gemini/GEMINI.md") {
                 Copy-Item -Path "agent_templates/gemini/GEMINI.md" -Destination (Join-Path $baseDir "GEMINI.md")
             }
         }
         'copilot' {
             $agentsDir = Join-Path $baseDir ".github/agents"
-            Generate-Commands -Agent 'copilot' -Extension 'agent.md' -ArgFormat '$ARGUMENTS' -OutputDir $agentsDir -ScriptVariant $Script
+            Generate-Commands -Agent 'copilot' -Extension 'agent.md' -ArgFormat '$ARGUMENTS' -OutputDir $agentsDir -ScriptVariant $Script -Lang $Lang
             
             # Generate companion prompt files
             $promptsDir = Join-Path $baseDir ".github/prompts"
@@ -294,70 +360,71 @@ function Build-Variant {
         }
         'cursor-agent' {
             $cmdDir = Join-Path $baseDir ".cursor/commands"
-            Generate-Commands -Agent 'cursor-agent' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'cursor-agent' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'qwen' {
             $cmdDir = Join-Path $baseDir ".qwen/commands"
-            Generate-Commands -Agent 'qwen' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'qwen' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
             if (Test-Path "agent_templates/qwen/QWEN.md") {
                 Copy-Item -Path "agent_templates/qwen/QWEN.md" -Destination (Join-Path $baseDir "QWEN.md")
             }
         }
         'opencode' {
             $cmdDir = Join-Path $baseDir ".opencode/command"
-            Generate-Commands -Agent 'opencode' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'opencode' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'windsurf' {
             $cmdDir = Join-Path $baseDir ".windsurf/workflows"
-            Generate-Commands -Agent 'windsurf' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'windsurf' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'codex' {
             $cmdDir = Join-Path $baseDir ".codex/prompts"
-            Generate-Commands -Agent 'codex' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'codex' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'kilocode' {
             $cmdDir = Join-Path $baseDir ".kilocode/workflows"
-            Generate-Commands -Agent 'kilocode' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'kilocode' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'auggie' {
             $cmdDir = Join-Path $baseDir ".augment/commands"
-            Generate-Commands -Agent 'auggie' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'auggie' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'roo' {
             $cmdDir = Join-Path $baseDir ".roo/commands"
-            Generate-Commands -Agent 'roo' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'roo' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'codebuddy' {
             $cmdDir = Join-Path $baseDir ".codebuddy/commands"
-            Generate-Commands -Agent 'codebuddy' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'codebuddy' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'amp' {
             $cmdDir = Join-Path $baseDir ".agents/commands"
-            Generate-Commands -Agent 'amp' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'amp' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'q' {
             $cmdDir = Join-Path $baseDir ".amazonq/prompts"
-            Generate-Commands -Agent 'q' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'q' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'bob' {
             $cmdDir = Join-Path $baseDir ".bob/commands"
-            Generate-Commands -Agent 'bob' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'bob' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
         'qoder' {
             $cmdDir = Join-Path $baseDir ".qoder/commands"
-            Generate-Commands -Agent 'qoder' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script
+            Generate-Commands -Agent 'qoder' -Extension 'md' -ArgFormat '$ARGUMENTS' -OutputDir $cmdDir -ScriptVariant $Script -Lang $Lang
         }
     }
     
     # Create zip archive
-    $zipFile = Join-Path $GenReleasesDir "spec-kit-template-${Agent}-${Script}-${Version}.zip"
+    $zipFile = Join-Path $GenReleasesDir "spec-kit-template-${Agent}-${Script}-${Lang}-${Version}.zip"
     Compress-Archive -Path "$baseDir/*" -DestinationPath $zipFile -Force
     Write-Host "Created $zipFile"
 }
 
-# Define all agents and scripts
+# Define all agents, scripts, and langs
 $AllAgents = @('claude', 'gemini', 'copilot', 'cursor-agent', 'qwen', 'opencode', 'windsurf', 'codex', 'kilocode', 'auggie', 'roo', 'codebuddy', 'amp', 'q', 'bob', 'qoder')
 $AllScripts = @('sh', 'ps')
+$AllLangs = @('en', 'cn')
 
 function Normalize-List {
     param([string]$Input)
@@ -408,13 +475,26 @@ if (-not [string]::IsNullOrEmpty($Scripts)) {
     $ScriptList = $AllScripts
 }
 
+# Determine lang list
+if (-not [string]::IsNullOrEmpty($Langs)) {
+    $LangList = Normalize-List -Input $Langs
+    if (-not (Validate-Subset -Type 'lang' -Allowed $AllLangs -Items $LangList)) {
+        exit 1
+    }
+} else {
+    $LangList = $AllLangs
+}
+
 Write-Host "Agents: $($AgentList -join ', ')"
 Write-Host "Scripts: $($ScriptList -join ', ')"
+Write-Host "Langs: $($LangList -join ', ')"
 
 # Build all variants
 foreach ($agent in $AgentList) {
     foreach ($script in $ScriptList) {
-        Build-Variant -Agent $agent -Script $script
+        foreach ($lang in $LangList) {
+            Build-Variant -Agent $agent -Script $script -Lang $lang
+        }
     }
 }
 

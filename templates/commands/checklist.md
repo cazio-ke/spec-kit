@@ -1,5 +1,6 @@
 ---
-description: 根据用户需求生成当前功能的自定义检查清单。
+description: Generate a custom checklist for the current feature based on user requirements.
+description-cn: 根据用户需求生成当前功能的自定义检查清单。
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json
   ps: scripts/powershell/check-prerequisites.ps1 -Json
@@ -26,6 +27,29 @@ scripts:
 
 **Metaphor**: If your spec is code written in English, the checklist is its unit test suite. You're testing whether the requirements are well-written, complete, unambiguous, and ready for implementation - NOT whether the implementation works.
 
+[CN]
+## 检查清单目的：“英语（需求文档）的单元测试”
+
+**关键概念**：检查清单是**针对需求编写质量的单元测试**——它们用于验证特定领域内需求的质量、清晰度和完整性。
+
+**非用于验证/测试功能实现**：
+
+- ❌ **不是**“验证按钮点击是否正常”
+- ❌ **不是**“测试错误处理是否有效”
+- ❌ **不是**“确认 API 是否返回 200”
+- ❌ **不是**检查代码/实现是否符合规格说明书
+
+**用于需求质量验证**：
+
+- ✅ “所有卡片类型的视觉层级需求是否都已定义？”（完整性）
+- ✅ “‘显著显示’是否已通过具体的尺寸/位置进行了量化？”（清晰度）
+- ✅ “所有交互元素的悬停状态需求是否一致？”（一致性）
+- ✅ “是否为键盘导航定义了无障碍需求？”（覆盖率）
+- ✅ “规格说明书是否定义了当 Logo 图片加载失败时会发生什么？”（边界情况）
+
+**隐喻**：如果你的规格说明书（Spec）是用英语写的代码，那么这份检查清单就是它的单元测试套件。你在测试需求本身是否编写良好、完整、无歧义并准备好进行实现——**而不是**测试实现后的功能是否正常。
+[/CN]
+
 ## User Input
 
 ```text
@@ -33,6 +57,16 @@ $ARGUMENTS
 ```
 
 You **MUST** consider the user input before proceeding (if not empty).
+
+[CN]
+## 用户输入
+
+```text
+$ARGUMENTS
+```
+
+如果用户输入不为空，你**必须**在继续之前考虑这些输入。
+[/CN]
 
 ## Execution Steps
 
@@ -265,6 +299,43 @@ Sample items:
 - "Are security requirements consistent with compliance obligations? [Consistency]"
 - "Are security failure/breach response requirements defined? [Gap, Exception Flow]"
 
+[CN]
+## 检查清单类型示例与样本项目
+
+**UX 需求质量：** `ux.md`
+样本项目（测试需求，而非实现）：
+- “视觉层级需求是否通过可衡量的标准进行了定义？ [Clarity, Spec §FR-1]”
+- “UI 元素的数量和位置是否已明确指定？ [Completeness, Spec §FR-1]”
+- “交互状态需求（悬停、聚焦、激活）是否定义一致？ [Consistency]”
+- “是否为所有交互元素指定了无障碍需求？ [Coverage, Gap]”
+- “当图片加载失败时，是否定义了回退行为？ [Edge Case, Gap]”
+- “‘显著显示’能否被客观衡量？ [Measurability, Spec §FR-4]”
+
+**API 需求质量：** `api.md`
+样本项目：
+- “是否为所有故障场景指定了错误响应格式？ [Completeness]”
+- “速率限制需求是否通过具体阈值进行了量化？ [Clarity]”
+- “所有端点的认证需求是否一致？ [Consistency]”
+- “是否为外部依赖定义了重试/超时需求？ [Coverage, Gap]”
+- “需求中是否记录了版本控制策略？ [Gap]”
+
+**性能需求质量：** `performance.md`
+样本项目：
+- “性能需求是否通过具体指标进行了量化？ [Clarity]”
+- “是否为所有关键用户旅程定义了性能目标？ [Coverage]”
+- “是否指定了不同负载条件下的性能需求？ [Completeness]”
+- “性能需求能否被客观衡量？ [Measurability]”
+- “是否为高负载场景定义了降级需求？ [Edge Case, Gap]”
+
+**安全性需求质量：** `security.md`
+样本项目：
+- “是否为所有受保护资源指定了认证需求？ [Coverage]”
+- “是否为敏感信息定义了数据保护需求？ [Completeness]”
+- “威胁模型是否已记录，且需求是否与之对齐？ [Traceability]”
+- “安全性需求是否与合规义务一致？ [Consistency]”
+- “是否定义了安全故障/违规响应需求？ [Gap, Exception Flow]”
+[/CN]
+
 ## Anti-Examples: What NOT To Do
 
 **❌ WRONG - These test implementation, not requirements:**
@@ -295,3 +366,36 @@ Sample items:
 - Correct: Validation of requirement quality
 - Wrong: "Does it do X?"
 - Correct: "Is X clearly specified?"
+
+[CN]
+## 反面教材：**不要**做什么
+
+**❌ 错误 —— 这些是在测试实现，而非需求：**
+
+```markdown
+- [ ] CHK001 - 验证落地页显示 3 个剧集卡片 [Spec §FR-001]
+- [ ] CHK002 - 测试悬停状态在桌面上工作正常 [Spec §FR-003]
+- [ ] CHK003 - 确认点击 Logo 跳转到主页 [Spec §FR-010]
+- [ ] CHK004 - 检查相关剧集部分显示 3-5 个项目 [Spec §FR-005]
+```
+
+**✅ 正确 —— 这些是在测试需求质量：**
+
+```markdown
+- [ ] CHK001 - 特色剧集的具体数量和布局是否已明确指定？ [完整性, Spec §FR-001]
+- [ ] CHK002 - 所有交互元素的悬停状态需求是否定义一致？ [一致性, Spec §FR-003]
+- [ ] CHK003 - 所有可点击品牌元素的导航需求是否清晰？ [清晰度, Spec §FR-010]
+- [ ] CHK004 - 相关剧集的选择标准是否已记录？ [Gap, Spec §FR-005]
+- [ ] CHK005 - 是否定义了异步剧集数据的加载状态需求？ [Gap]
+- [ ] CHK006 - “视觉层级”需求能否被客观衡量？ [可衡量性, Spec §FR-001]
+```
+
+**关键区别：**
+
+- 错误：测试系统是否工作正确
+- 正确：测试需求是否编写正确
+- 错误：行为验证 (Verification)
+- 正确：需求质量确认 (Validation)
+- 错误：“它做 X 吗？”
+- 正确：“X 是否被清晰指定了？”
+[/CN]

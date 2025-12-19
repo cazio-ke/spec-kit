@@ -7,6 +7,18 @@ All notable changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2025-12-18
+
+- Consolidated English and Chinese template directories into single-source files with language tags.
+- Added `--lang` option to `init` command to support language-specific template extraction (English or Chinese).
+- Automated language-specific package generation in release scripts (Bash and PowerShell).
+
+## [0.0.23] - 2025-12-18
+
+- Consolidated English and Chinese template directories into single-source files with language tags.
+- Added `--lang` option to `init` command to support language-specific template extraction (English or Chinese).
+- Automated language-specific package generation in release scripts (Bash and PowerShell).
+
 ## [0.0.22] - 2025-11-07
 
 - Support for VS Code/Copilot agents, and moving away from prompts to proper agents with hand-offs.
