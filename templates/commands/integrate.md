@@ -36,11 +36,11 @@ Follow this execution flow:
    - **Principles**: Were there any "lessons learned," new coding standards, or architectural constraints identified during implementation that should apply to future features?
 
 3. **Global Artifact Synchronization**:
-   - **Update `.specify/memory/project.md`**:
+   - **Update `memory/project.md`**:
      - Incorporate new components into the `Architecture Overview`.
      - Update `System Context` if external integrations were added or changed.
      - Refresh the `Technology Stack` if new tools were introduced.
-   - **Update `.specify/memory/constitution.md`**:
+   - **Update `memory/constitution.md`**:
      - If new non-negotiable rules or principles were identified, add them to the relevant section.
      - Increment the `CONSTITUTION_VERSION` and update `LAST_AMENDED_DATE`.
      - Update the `Sync Impact Report` at the top of the file.
@@ -71,11 +71,11 @@ Follow this execution flow:
    - **准则**：在实施过程中是否识别出了任何“经验教训”、新的编码标准或架构约束，且这些内容应适用于未来的功能开发？
 
 3. **全局产物同步**：
-   - **更新 `.specify/memory/project.md`**：
+   - **更新 `memory/project.md`**：
      - 将新组件整合到 `Architecture Overview` 中。
      - 如果添加或更改了外部集成，请更新 `System Context`。
      - 如果引入了新工具，请刷新 `Technology Stack`。
-   - **更新 `.specify/memory/constitution.md`**：
+   - **更新 `memory/constitution.md`**：
      - 如果识别出了新的不可协商规则或准则，请将其添加到相关章节。
      - 升级 `CONSTITUTION_VERSION` 并更新 `LAST_AMENDED_DATE`。
      - 更新文件顶部的 `Sync Impact Report`。

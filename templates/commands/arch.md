@@ -23,7 +23,7 @@ $ARGUMENTS
 
 ## Outline
 
-You are updating the project architecture documentation at `.specify/memory/project.md`. Your goal is to provide a comprehensive view of the system's structure, context, and technology stack.
+You are updating the project architecture documentation at `memory/project.md`. Your goal is to provide a comprehensive view of the system's structure, context, and technology stack.
 
 Follow this execution flow:
 
@@ -41,7 +41,7 @@ Follow this execution flow:
    - Document the `Technology Stack` used in the project.
 
 3. **Draft the Updated Documentation**:
-   - Use the template at `.specify/memory/project.md` as your guide.
+   - Use the template at `memory/project.md` as your guide.
    - Replace every placeholder `[ALL_CAPS_IDENTIFIER]` with concrete, factual information.
    - Ensure the `LAST_UPDATED_DATE` is set to today (YYYY-MM-DD).
 
@@ -50,13 +50,13 @@ Follow this execution flow:
    - Ensure all key technical decisions reflected in the code are captured.
 
 5. **Final Output**:
-   - Write the completed architecture documentation back to `.specify/memory/project.md` (overwrite).
+   - Write the completed architecture documentation back to `memory/project.md` (overwrite).
    - Provide a summary of the key findings and any major changes made to the documentation.
 
 [CN]
 ## 流程大纲
 
-你正在更新位于 `.specify/memory/project.md` 的项目架构文档。你的目标是提供系统结构、上下文和技术栈的全面视图。
+你正在更新位于 `memory/project.md` 的项目架构文档。你的目标是提供系统结构、上下文和技术栈的全面视图。
 
 请遵循以下执行流程：
 
@@ -74,7 +74,7 @@ Follow this execution flow:
    - 记录项目中使用的 `Technology Stack`（技术栈）。
 
 3. **起草更新后的文档**：
-   - 使用 `.specify/memory/project.md` 中的模板作为指导。
+   - 使用 `memory/project.md` 中的模板作为指导。
    - 将每个占位符 `[ALL_CAPS_IDENTIFIER]` 替换为具体的、事实性的信息。
    - 确保 `LAST_UPDATED_DATE` 设置为今天 (YYYY-MM-DD)。
 
@@ -83,7 +83,7 @@ Follow this execution flow:
    - 确保代码中所体现的关键技术决策都已被记录。
 
 5. **最终输出**：
-   - 将完整的架构文档写回 `.specify/memory/project.md`（覆盖）。
+   - 将完整的架构文档写回 `memory/project.md`（覆盖）。
    - 提供关键发现的摘要以及对文档所做的主要更改。
 [/CN]
 
