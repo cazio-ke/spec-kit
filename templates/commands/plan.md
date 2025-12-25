@@ -49,9 +49,9 @@ $ARGUMENTS
 
 1. **Setup**: Run `{SCRIPT}` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-2. **Load context**: Read FEATURE_SPEC, `/memory/constitution.md` and `/memory/architecture.md`(only if it exists). Load IMPL_PLAN template (already copied).
+2. **Load context**: Read FEATURE_SPEC, `/memory/constitution.md`. Read `/memory/product.md`, `/memory/tech.md`, and `/memory/structure.md` (only if they exist). Load IMPL_PLAN file (do not reset).
 
-3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
+3. **Execute plan workflow**: Read and update the IMPL_PLAN file. Follow the structure in the file to:
    - Fill Technical Context (mark unknowns as "NEEDS CLARIFICATION")
    - Fill Constitution Check section from constitution
    - Evaluate gates (ERROR if violations unjustified)
@@ -68,9 +68,9 @@ $ARGUMENTS
 
 1.  **设置 (Setup)**：从仓库根目录运行 `{SCRIPT}` 并解析 JSON 以获取 FEATURE_SPEC（功能规范）、IMPL_PLAN（实施计划）、SPECS_DIR（规范目录）、BRANCH（分支）。对于参数中的单引号，例如 "I'm Groot"，请使用转义语法：例如 'I'\''m Groot'（或者如果可能，使用 double-quote，双引号："I'm Groot"）。
 
-2.  **加载上下文 (Load context)**：读取 FEATURE_SPEC、`/memory/constitution.md` 和 `/memory/architecture.md`（仅当存在时）。加载 IMPL_PLAN 模板（已复制）。
+2.  **加载上下文 (Load context)**：读取 FEATURE_SPEC、`/memory/constitution.md`。读取 `/memory/product.md`、`/memory/tech.md` 和 `/memory/structure.md`（仅当它们存在时）。加载 IMPL_PLAN 文件（不要重置）。
 
-3.  **执行计划工作流 (Execute plan workflow)**：遵循 IMPL_PLAN 模板中的结构以执行以下操作：
+3.  **执行计划工作流 (Execute plan workflow)**：读取并更新 IMPL_PLAN 文件。遵循文件中的结构以执行以下操作：
     - 填写技术背景 (Technical Context)（将未知项标记为 "NEEDS CLARIFICATION"）
     - 根据章程 (constitution) 填写章程检查 (Constitution Check) 部分
     - 评估门控/关卡 (gates)（如果违规且无正当理由则报错）

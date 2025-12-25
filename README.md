@@ -527,8 +527,10 @@ The output of this step will include a number of implementation detail documents
 .
 ├── CLAUDE.md
 ├── memory
-│  └── constitution.md
-│  └── architecture.md
+│  ├── constitution.md
+│  ├── product.md
+│  ├── tech.md
+│  └── structure.md
 ├── scripts
 │  ├── check-prerequisites.sh
 │  ├── common.sh
@@ -647,7 +649,7 @@ The final stage of the lifecycle is integrating the completed feature back into 
 ```
 
 This command will:
-- Synchronize architectural changes back to the global `architecture.md`
+- Synchronize architectural changes back to the global `structure.md`
 - Update the project's global principles in `constitution.md` based on implementation insights
 - Ensure that the entire project "remembers" the patterns and decisions made during this feature development, making them available for future features.
 

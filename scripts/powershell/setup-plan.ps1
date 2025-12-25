@@ -31,26 +31,34 @@ if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit $paths.HAS_GI
 # Ensure the feature directory exists
 New-Item -ItemType Directory -Path $paths.FEATURE_DIR -Force | Out-Null
 
-# Copy design template if it exists, otherwise note it or create empty file
-$template = Join-Path $paths.REPO_ROOT '.specify/templates/design-template.md'
-if (Test-Path $template) { 
-    Copy-Item $template $paths.IMPL_DESIGN -Force
-    Write-Output "Copied design template to $($paths.IMPL_DESIGN)"
+# Copy design template if it does not exist
+if (-not (Test-Path $paths.IMPL_DESIGN)) {
+    $template = Join-Path $paths.REPO_ROOT '.specify/templates/design-template.md'
+    if (Test-Path $template) { 
+        Copy-Item $template $paths.IMPL_DESIGN -Force
+        Write-Output "Copied design template to $($paths.IMPL_DESIGN)"
+    } else {
+        Write-Warning "Design template not found at $template"
+        # Create a basic design file if template doesn't exist
+        New-Item -ItemType File -Path $paths.IMPL_DESIGN -Force | Out-Null
+    }
 } else {
-    Write-Warning "Design template not found at $template"
-    # Create a basic design file if template doesn't exist
-    New-Item -ItemType File -Path $paths.IMPL_DESIGN -Force | Out-Null
+    Write-Output "Design file already exists at $($paths.IMPL_DESIGN)"
 }
 
-# Copy plan template if it exists, otherwise note it or create empty file
+# Copy plan template if it does not exist
 $template = Join-Path $paths.REPO_ROOT '.specify/templates/plan-template.md'
-if (Test-Path $template) { 
-    Copy-Item $template $paths.IMPL_PLAN -Force
-    Write-Output "Copied plan template to $($paths.IMPL_PLAN)"
+if (-not (Test-Path $paths.IMPL_PLAN)) {
+    if (Test-Path $template) { 
+        Copy-Item $template $paths.IMPL_PLAN -Force
+        Write-Output "Copied plan template to $($paths.IMPL_PLAN)"
+    } else {
+        Write-Warning "Plan template not found at $template"
+        # Create a basic plan file if template doesn't exist
+        New-Item -ItemType File -Path $paths.IMPL_PLAN -Force | Out-Null
+    }
 } else {
-    Write-Warning "Plan template not found at $template"
-    # Create a basic plan file if template doesn't exist
-    New-Item -ItemType File -Path $paths.IMPL_PLAN -Force | Out-Null
+    Write-Output "Plan file already exists at $($paths.IMPL_PLAN)"
 }
 
 

@@ -36,26 +36,34 @@ check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
 # Ensure the feature directory exists
 mkdir -p "$FEATURE_DIR"
 
-# Copy design template if it exists
-TEMPLATE="$REPO_ROOT/.specify/templates/design-template.md"
-if [[ -f "$TEMPLATE" ]]; then
-    cp "$TEMPLATE" "$IMPL_DESIGN"
-    echo "Copied design template to $IMPL_DESIGN"
+# Copy design template if it does not exist
+if [[ ! -f "$IMPL_DESIGN" ]]; then
+    TEMPLATE="$REPO_ROOT/.specify/templates/design-template.md"
+    if [[ -f "$TEMPLATE" ]]; then
+        cp "$TEMPLATE" "$IMPL_DESIGN"
+        echo "Copied design template to $IMPL_DESIGN"
+    else
+        echo "Warning: Design template not found at $TEMPLATE"
+        # Create a basic design file if template doesn't exist
+        touch "$IMPL_DESIGN"
+    fi
 else
-    echo "Warning: Design template not found at $TEMPLATE"
-    # Create a basic plan file if template doesn't exist
-    touch "$IMPL_DESIGN"
+    echo "Design file already exists at $IMPL_DESIGN"
 fi
 
-# Copy plan template if it exists
-TEMPLATE="$REPO_ROOT/.specify/templates/plan-template.md"
-if [[ -f "$TEMPLATE" ]]; then
-    cp "$TEMPLATE" "$IMPL_PLAN"
-    echo "Copied plan template to $IMPL_PLAN"
+# Copy plan template if it does not exist
+if [[ ! -f "$IMPL_PLAN" ]]; then
+    TEMPLATE="$REPO_ROOT/.specify/templates/plan-template.md"
+    if [[ -f "$TEMPLATE" ]]; then
+        cp "$TEMPLATE" "$IMPL_PLAN"
+        echo "Copied plan template to $IMPL_PLAN"
+    else
+        echo "Warning: Plan template not found at $TEMPLATE"
+        # Create a basic plan file if template doesn't exist
+        touch "$IMPL_PLAN"
+    fi
 else
-    echo "Warning: Plan template not found at $TEMPLATE"
-    # Create a basic plan file if template doesn't exist
-    touch "$IMPL_PLAN"
+    echo "Plan file already exists at $IMPL_PLAN"
 fi
 
 # Output results
